@@ -13,7 +13,7 @@ title                    : "Nikolaus Holzer"
 title_separator          : "-"
 name                     : &name "Nikolaus Holzer"
 description              : &description "Researcher in Formal Methods, Reinforcement Learning, and Causality"
-url                      : https://nikolausholzer.com # The base hostname & protocol for your site e.g. "https://[your GitHub username].github.io",
+url: "https://nikolausholzer.github.io"
                                                            # or if you already have some other page hosted on Github then use "https://[your GitHub username].github.io/[Your Repo Name]"
 baseurl                  : "" # the subpath of your site, e.g. "/blog"
 repository               : "nik-hz/personal_website.github.io"
