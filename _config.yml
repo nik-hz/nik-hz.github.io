@@ -25,7 +25,6 @@ author:
   # Biographic information
   avatar       : "profile.png"
   name         : "Nikolaus Holzer"
-  pronouns     : "he/him"
   bio          : "Researcher in formal methods, reinforcement learning, and AI reasoning. Interested in explainable agent behavior, temporal causality, and program synthesis."
   location     : "New York, USA"
   employer     : "Columbia University"
