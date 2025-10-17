@@ -5,6 +5,10 @@ on:
     - cron: '0 3 * * 0'   # Every Sunday at 03:00 UTC
   workflow_dispatch:
 
+permissions:
+  contents: write
+
+
 jobs:
   update-bib:
     runs-on: ubuntu-latest
