@@ -19,24 +19,50 @@ jobs:
         run: |
           pip install scholarly bibtexparser
 
-      - name: Fetch publications from Google Scholar
+      - name: Fetch publications from Google Scholar (fast + reliable)
         run: |
+          pip install scholarly bibtexparser requests
           python3 - <<'EOF'
+          import json, time, requests, sys
           from scholarly import scholarly
-          scholar_id = "cDAETuUAAAAJ"  # ← your Google Scholar ID
+
+          scholar_id = "cDAETuUAAAAJ"  # your ID
+          out_path = "_bibliographies/publications.bib"
+
+          def safe_fetch(pub):
+              for _ in range(3):
+                  try:
+                      filled = scholarly.fill(pub)
+                      return filled
+                  except Exception as e:
+                      print("Retrying fetch:", e)
+                      time.sleep(2)
+              return None
+
+          print("Fetching author data...")
           author = scholarly.search_author_id(scholar_id)
           author = scholarly.fill(author, sections=['publications'])
+
           entries = []
-          for pub in author['publications']:
-              pub = scholarly.fill(pub)
-              try:
-                  bib = scholarly.bibtex(pub)
-                  entries.append(bib)
-              except Exception as e:
-                  print("Skipping:", pub.get('bib', {}).get('title'), e)
-          with open('_bibliographies/publications.bib', 'w') as f:
-              f.write('\n\n'.join(entries))
+          for i, pub in enumerate(author.get('publications', []), 1):
+              print(f"[{i}] {pub.get('bib', {}).get('title', 'Untitled')}")
+              full = safe_fetch(pub)
+              if not full:
+                  continue
+              bib = full.get('bib', {})
+              bibtex = f"@article{{{bib.get('title','').replace(' ','_')[:50]}," \
+                      f"\n  title={{ {bib.get('title','')} }}," \
+                      f"\n  author={{ {bib.get('author','')} }}," \
+                      f"\n  year={{ {bib.get('pub_year','')} }}," \
+                      f"\n  journal={{ {bib.get('journal','')} }}," \
+                      f"\n}}\n"
+              entries.append(bibtex)
+
+          with open(out_path, "w") as f:
+              f.write("\n".join(entries))
+          print(f"Wrote {len(entries)} entries to", out_path)
           EOF
+
 
       - name: Commit and push if changed
         run: |
