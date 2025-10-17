@@ -17,12 +17,9 @@ main:
   - title: "Teaching"
     url: /teaching/    
     
-  # - title: "Portfolio"
-  #   url: /portfolio/
+  - title: "PhD Advice"
+    url: /phd-advice/
         
-  # - title: "Blog Posts"
-  #   url: /year-archive/
-    
   - title: "CV"
     url: /cv/
     
