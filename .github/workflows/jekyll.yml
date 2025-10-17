@@ -25,6 +25,7 @@ jobs:
       - name: Install dependencies and build site
         run: |
           bundle install
+          sed -i 's/File.exists?/File.exist?/g' $(bundle show jekyll-scholar)/lib/jekyll/scholar/utilities.rb
           bundle exec jekyll build
 
       - name: Deploy to GitHub Pages
