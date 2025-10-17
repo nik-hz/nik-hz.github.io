@@ -9,7 +9,7 @@ gem "jekyll-paginate"
 gem "jekyll-sitemap"
 gem "jekyll-redirect-from"
 gem "jemoji"
-
+gem "jekyll-gist"  
 # Optional AcademicPages extras
 gem "jekyll-scholar", "~> 7.0.0"
 gem "webrick" # needed for local serve
