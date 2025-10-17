@@ -25,7 +25,7 @@ author:
   # Biographic information
   avatar       : "profile.png"
   name         : "Nikolaus Holzer"
-  bio          : "Researcher in formal methods, reinforcement learning, and AI reasoning. Interested in explainable agent behavior, temporal causality, and program synthesis."
+  bio          : "Researcher in Code Generation, RL, Formal and AI Reasoning. Interested in intelligent agent behavior, software engineering, formal reasoning."
   location     : "New York, USA"
   employer     : "Columbia University"
   uri          : "https://nikolausholzer.com"
