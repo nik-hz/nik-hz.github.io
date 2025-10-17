@@ -5,7 +5,11 @@ permalink: /publications/
 author_profile: true
 ---
 
-This list is automatically generated from my [Google Scholar](https://scholar.google.com/citations?user=cDAETuUAAAAJ) profile.
+{% if site.author.googlescholar %}
+<div class="wordwrap">
+  This list is automatically generated from my
+  <a href="{{ site.author.googlescholar }}">Google Scholar profile</a>.
+</div>
+{% endif %}
 
 {% bibliography %}
-

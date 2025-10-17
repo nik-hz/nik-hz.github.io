@@ -13,4 +13,3 @@ gem "jekyll-gist"
 # Optional AcademicPages extras
 gem "jekyll-scholar", "~> 7.0.0"
 gem "webrick" # needed for local serve
-gem 'jekyll-scholar'
