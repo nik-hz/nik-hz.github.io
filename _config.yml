@@ -289,6 +289,18 @@ whitelist:
   - jekyll-redirect-from
   - jemoji
 
+# Jekyll Scholar configuration
+scholar:
+  style: apa
+  locale: en
+  source: ./_bibliographies
+  bibliography: publications.bib
+  replace_strings: true
+  details_dir: bibliography
+  details_layout: bibtex.html
+  sort_by: year
+  order: descending
+
 
 # Archives
 #  Type
