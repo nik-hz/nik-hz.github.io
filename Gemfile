@@ -11,5 +11,5 @@ gem "jekyll-redirect-from"
 gem "jemoji"
 gem "jekyll-gist"  
 # Optional AcademicPages extras
-gem 'jekyll-scholar', '~> 6.12.0'
+gem 'jekyll-scholar', '~> 6.8.1'
 gem "webrick" # needed for local serve
