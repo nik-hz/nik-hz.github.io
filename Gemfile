@@ -1,13 +1,15 @@
-source 'https://rubygems.org'
+source "https://rubygems.org"
 
-group :jekyll_plugins do
-  gem 'jekyll'
-  gem 'jekyll-feed'
-  gem 'jekyll-sitemap'
-  gem 'jekyll-redirect-from'
-  gem 'jemoji'
-  gem 'webrick', '~> 1.8'
-end
+# Explicit Jekyll setup (not github-pages)
+gem "jekyll", "~> 4.3.2"
 
-gem 'github-pages'
-gem 'connection_pool', '2.5.0'
+# Core plugins AcademicPages needs
+gem "jekyll-feed"
+gem "jekyll-paginate"
+gem "jekyll-sitemap"
+gem "jekyll-redirect-from"
+gem "jemoji"
+
+# Optional AcademicPages extras
+gem "jekyll-scholar", "~> 7.0.0"
+gem "webrick" # needed for local serve
