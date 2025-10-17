@@ -293,7 +293,7 @@ whitelist:
 scholar:
   style: apa
   locale: en
-  source: ./_bibliographies
+  source: ./_bibliography
   bibliography: publications.bib
   replace_strings: true
   details_dir: bibliography

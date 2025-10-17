@@ -63,11 +63,11 @@ author_profile: true
   {% include archive-single.html %}
 {% endfor %}
 
----
+<!-- ---
 
 ## Talks
 
 {% assign talks = site.talks | sort: 'date' | reverse %}
 {% for item in talks %}
   {% include archive-single.html %}
-{% endfor %}
+{% endfor %} -->
