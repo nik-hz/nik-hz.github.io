@@ -1,13 +1,28 @@
 name: Update publications from Google Scholar
 
 on:
-  schedule:
-    - cron: '0 3 * * 0'   # Every Sunday at 03:00 UTC
   workflow_dispatch:
+    inputs:
+      author_id:
+        description: "Google Scholar author ID (the user=... part)"
+        required: true
+      pub_limit:
+        description: "Max publications to fetch (be polite)"
+        default: "150"
+        required: false
+      use_tor:
+        description: "Use Tor for proxy? (requires TOR_CTRL_PWD secret)"
+        type: choice
+        options: ["no", "yes"]
+        default: "no"
+        required: false
+
+concurrency:
+  group: update-scholar
+  cancel-in-progress: false
 
 permissions:
   contents: write
-
 
 jobs:
   update-bib:
@@ -15,59 +30,248 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
       - name: Install dependencies
         run: |
-          pip install scholarly bibtexparser
+          python -m pip install --upgrade pip
+          pip install scholarly==1.7.11 bibtexparser unidecode
 
-      - name: Fetch publications from Google Scholar (fast + reliable)
+      # Optional Tor setup (only when requested and secret provided)
+      - name: Install & configure Tor
+        if: ${{ github.event.inputs.use_tor == 'yes' && secrets.TOR_CTRL_PWD != '' }}
         run: |
-          pip install scholarly bibtexparser requests
-          python3 - <<'EOF'
-          import json, time, requests, sys
-          from scholarly import scholarly
+          sudo apt-get update
+          sudo apt-get install -y tor
+          {
+            echo "ControlPort 9051"
+            echo "SOCKSPort 9050"
+            echo "CookieAuthentication 0"
+            echo "HashedControlPassword $(tor --hash-password '${TOR_CTRL_PWD}')"
+          } | sudo tee -a /etc/tor/torrc
+          sudo systemctl restart tor
+        env:
+          TOR_CTRL_PWD: ${{ secrets.TOR_CTRL_PWD }}
 
-          scholar_id = "cDAETuUAAAAJ"  # your ID
-          out_path = "_bibliographies/publications.bib"
+      - name: Fetch & write publications.bib
+        env:
+          GSCHOLAR_AUTHOR_ID: ${{ github.event.inputs.author_id }}
+          GSCHOLAR_PUBLICATION_LIMIT: ${{ github.event.inputs.pub_limit }}
+          TOR_CTRL_PWD: ${{ secrets.TOR_CTRL_PWD }}
+          USE_TOR: ${{ github.event.inputs.use_tor }}
+        run: |
+          python - <<'PY'
+          import hashlib
+          import os
+          import random
+          import re
+          import sys
+          import time
+          import unicodedata
+          from pathlib import Path
 
-          def safe_fetch(pub):
-              for _ in range(3):
-                  try:
-                      filled = scholarly.fill(pub)
-                      return filled
-                  except Exception as e:
-                      print("Retrying fetch:", e)
-                      time.sleep(2)
-              return None
+          from scholarly import MaxTriesExceededException, ProxyGenerator, scholarly
 
-          print("Fetching author data...")
-          author = scholarly.search_author_id(scholar_id)
-          author = scholarly.fill(author, sections=['publications'])
+          import bibtexparser
+          from bibtexparser.bibdatabase import BibDatabase
+          from bibtexparser.bwriter import BibTexWriter
 
-          entries = []
-          for i, pub in enumerate(author.get('publications', []), 1):
-              print(f"[{i}] {pub.get('bib', {}).get('title', 'Untitled')}")
-              full = safe_fetch(pub)
-              if not full:
-                  continue
-              bib = full.get('bib', {})
-              bibtex = f"@article{{{bib.get('title','').replace(' ','_')[:50]}," \
-                      f"\n  title={{ {bib.get('title','')} }}," \
-                      f"\n  author={{ {bib.get('author','')} }}," \
-                      f"\n  year={{ {bib.get('pub_year','')} }}," \
-                      f"\n  journal={{ {bib.get('journal','')} }}," \
-                      f"\n}}\n"
-              entries.append(bibtex)
+          # --- Config from env ---
+          AUTHOR_ID = (os.environ.get("GSCHOLAR_AUTHOR_ID") or "").strip()
+          OUT_PATH = Path("_bibliographies/publications.bib")
+          TMP_PATH = Path("_bibliographies/publications.bib.tmp")
+          MAX_PUBS = int(os.environ.get("GSCHOLAR_PUBLICATION_LIMIT") or "150")
+          USE_TOR = (os.environ.get("USE_TOR") or "no").lower() == "yes"
+          TOR_PWD = os.environ.get("TOR_CTRL_PWD") or ""
 
-          with open(out_path, "w") as f:
-              f.write("\n".join(entries))
-          print(f"Wrote {len(entries)} entries to", out_path)
-          EOF
+          SLEEP_BASE = 0.6
+          SLEEP_JITTER = 0.6
+          RETRIES = 5
+          RETRY_MAX_SLEEP = 16
 
+          def log(*a):
+            print(*a, file=sys.stdout, flush=True)
+
+          def normalize_ascii(s: str) -> str:
+            return unicodedata.normalize("NFKD", s or "").strip()
+
+          def slugify(s: str) -> str:
+            s = normalize_ascii(s)
+            s = re.sub(r"[{}]", "", s)  # remove braces harmful in keys
+            s = re.sub(r"[^A-Za-z0-9]+", "-", s).strip("-")
+            return s.lower()
+
+          def stable_citekey(bib):
+            author = (bib.get("author") or "").split(" and ")[0].strip()
+            last = author.split()[-1] if author else "unknown"
+            year = str(bib.get("pub_year") or bib.get("year") or "")
+            title = (bib.get("title") or "")[:80]
+            seed = f"{author}|{year}|{title}"
+            h = hashlib.sha1(seed.encode("utf-8")).hexdigest()[:6]
+            return (slugify(f"{last}-{year}-{title}")[:48] + "-" + h)
+
+          def choose_entrytype(bib):
+            j = (bib.get("journal") or "").lower()
+            b = (bib.get("bibtex_venue") or "").lower()
+            conf = any(k in b for k in ("proc", "conference", "neurips", "icml", "iclr", "kdd", "cvpr", "eccv", "acl"))
+            if conf:
+              return "inproceedings"
+            if j:
+              return "article"
+            return "misc"
+
+          def safe_fill(obj, attempts=RETRIES):
+            for i in range(attempts):
+              try:
+                return scholarly.fill(obj)
+              except Exception as e:
+                wait = min((2 ** i) + random.random(), RETRY_MAX_SLEEP)
+                log(f"  fill() retry {i+1}/{attempts}: {e} -> sleeping {wait:.1f}s")
+                time.sleep(wait)
+            raise RuntimeError("Failed to fill after retries")
+
+          def init_proxy():
+            scholarly.set_timeout(30)
+            pg = ProxyGenerator()
+
+            if USE_TOR and TOR_PWD:
+              log("Using Tor proxy via ProxyGenerator.Tor_External()")
+              pg.Tor_External(tor_sock_port=9050, tor_control_port=9051, tor_password=TOR_PWD)
+              scholarly.use_proxy(pg)
+              return "tor"
+
+            # Try free proxies as a fallback
+            try:
+              log("Trying free rotating proxies via ProxyGenerator.FreeProxies()")
+              pg.FreeProxies()
+              scholarly.use_proxy(pg)
+              return "free"
+            except Exception as e:
+              log(f"FreeProxies failed ({e}); continuing without proxy")
+              return "none"
+
+          def fetch_author_publications(author_id: str, limit: int):
+            log(f"Fetching author {author_id} (limit={limit})")
+            author = scholarly.search_author_id(author_id, filled=True, publication_limit=limit)
+            pubs = author.get("publications", [])[:limit]
+            log(f"Found {len(pubs)} publications listed by Scholar")
+            results = []
+            for idx, pub in enumerate(pubs, 1):
+              t = pub.get("bib", {}).get("title", "Untitled")
+              log(f"[{idx:03d}] {t}")
+              time.sleep(SLEEP_BASE + random.random() * SLEEP_JITTER)  # be polite
+              try:
+                full = safe_fill(pub)
+                results.append(full)
+              except Exception as e:
+                log(f"  Skipping (could not fill): {e}")
+            return results
+
+          def to_bib_entries(filled_pubs):
+            entries = []
+            seen = set()
+            for p in filled_pubs:
+              bib = p.get("bib", {})
+              entry = {
+                "ENTRYTYPE": choose_entrytype(bib),
+                "ID": stable_citekey(bib),
+                "title": normalize_ascii(bib.get("title")),
+                "author": normalize_ascii(bib.get("author")),
+                "year": str(bib.get("pub_year") or bib.get("year") or "").strip(),
+              }
+              if bib.get("journal"):
+                entry["journal"] = normalize_ascii(bib["journal"])
+              if bib.get("eprint"):
+                entry["eprint"] = normalize_ascii(bib["eprint"])
+              if bib.get("volume"):
+                entry["volume"] = str(bib["volume"])
+              if bib.get("number"):
+                entry["number"] = str(bib["number"])
+              if bib.get("pages"):
+                entry["pages"] = normalize_ascii(bib["pages"])
+              if bib.get("publisher"):
+                entry["publisher"] = normalize_ascii(bib["publisher"])
+              if bib.get("booktitle"):
+                entry["booktitle"] = normalize_ascii(bib["booktitle"])
+              if p.get("pub_url"):
+                entry["url"] = p["pub_url"]
+              if p.get("eprint_url"):
+                entry["url"] = p["eprint_url"]
+
+              if entry["ID"] in seen:
+                # tie-break suffix if a duplicate key appears
+                suf = hashlib.md5((entry["ID"] + entry.get("title", "")).encode()).hexdigest()[:3]
+                entry["ID"] += suf
+              seen.add(entry["ID"])
+              entries.append(entry)
+
+            def sort_key(e):
+              y = e.get("year") or ""
+              try:
+                ynum = int(re.sub(r"\D", "", y)[:4]) if y else -1
+              except Exception:
+                ynum = -1
+              return (-ynum, (e.get("title") or "").lower())
+
+            entries.sort(key=sort_key)
+            return entries
+
+          def write_bib(entries, path: Path):
+            db = BibDatabase()
+            db.entries = entries
+            writer = BibTexWriter()
+            writer.indent = "  "
+            writer.order_entries_by = ("year", "author", "title")
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(writer.write(db), encoding="utf-8")
+
+          def files_equal(p1: Path, p2: Path) -> bool:
+            if not p1.exists() or not p2.exists():
+              return False
+            return p1.read_text(encoding="utf-8") == p2.read_text(encoding="utf-8")
+
+          if not AUTHOR_ID:
+            log("ERROR: GSCHOLAR_AUTHOR_ID is required")
+            sys.exit(2)
+
+          init_proxy()
+
+          try:
+            pubs = fetch_author_publications(AUTHOR_ID, MAX_PUBS)
+          except MaxTriesExceededException as e:
+            log(f"MaxTriesExceededException: {e}")
+            sys.exit(78)
+          except Exception as e:
+            log(f"ERROR fetching author/pubs: {e}")
+            sys.exit(1)
+
+          if not pubs:
+            log("No publications fetched; leaving existing .bib unchanged.")
+            sys.exit(0)
+
+          entries = to_bib_entries(pubs)
+
+          # Write to tmp, compare, replace if changed
+          TMP_PATH.parent.mkdir(parents=True, exist_ok=True)
+          write_bib(entries, TMP_PATH)
+
+          if OUT_PATH.exists() and files_equal(OUT_PATH, TMP_PATH):
+            log("No changes in publications.bib")
+            TMP_PATH.unlink(missing_ok=True)
+            sys.exit(0)
+
+          TMP_PATH.replace(OUT_PATH)
+          log(f"Wrote {len(entries)} entries to {OUT_PATH}")
+          PY
 
       - name: Commit and push if changed
         run: |
-          git config user.name "github-actions[bot]"
+          git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add _bibliographies/publications.bib
-          git commit -m "Auto-update publications from Google Scholar" || echo "No changes"
+          git commit -m "Update publications (Google Scholar)" || echo "No changes"
           git push
