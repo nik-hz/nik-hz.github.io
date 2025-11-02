@@ -5,10 +5,11 @@ on:
     inputs:
       author_id:
         description: "Google Scholar author ID (the user=... part)"
+        default: "cDAETuUAAAAJ"
         required: true
       pub_limit:
         description: "Max publications to fetch (be polite)"
-        default: "150"
+        default: "10"
         required: false
       use_tor:
         description: "Use Tor for proxy? (requires TOR_CTRL_PWD secret)"

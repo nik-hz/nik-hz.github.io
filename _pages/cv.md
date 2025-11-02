@@ -59,9 +59,10 @@ author_profile: true
 ## Teaching
 
 {% assign teaching = site.teaching | sort: 'date' | reverse %}
-{% for item in teaching %}
+{% for post in teaching %}
   {% include archive-single.html %}
 {% endfor %}
+
 
 <!-- ---
 
