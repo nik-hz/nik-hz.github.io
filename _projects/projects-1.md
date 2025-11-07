@@ -1,7 +1,7 @@
 ---
 title: "Mechanics of Learned Reasoning 1: TempoBench"
 excerpt: "Mechanics of Learned Reasoning 1: TempoBench<br/><img src='/images/tempobench.png' width="500">. <a href="reasoning.nikolausholzer.com">project page</a>"
-collection: portfolio
+collection: projects
 link: "https://reasoning.nikolausholzer.com/mlr/mlr1/"
 ---
 
