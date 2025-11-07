@@ -11,7 +11,7 @@ This is a shortened version of the full article available on my research website
 
 As a small teaser and good high level overview, please enjoy our **paper abstract:**
 
-![Performance overview](../images/p1-overview.png)
+![Performance overview](/images/p1-overview.png)
 
 ---
 
