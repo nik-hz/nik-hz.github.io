@@ -20,6 +20,9 @@ main:
   - title: "Projects"
     url: /projects/
 
+  - title: "Reasoning"
+    url: https://reasoning.nikolausholzer.com
+
   - title: "CV"
     url: /cv/
     
