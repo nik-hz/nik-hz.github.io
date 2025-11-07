@@ -13,7 +13,7 @@ As a small teaser and good high level overview, please enjoy our **paper abstrac
 
 <div class="full-width-image">
 
-![Performance overview](p1-overview.png)
+![Performance overview](/images/p1-overview.png)
 
 </div>
 
