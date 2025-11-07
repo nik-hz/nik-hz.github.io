@@ -2,7 +2,7 @@
 title: "Mechanics of Learned Reasoning 1: TempoBench"
 excerpt: "Mechanics of Learned Reasoning 1: TempoBench<br/><img src='/images/tempobench.png' width='750'>."
 collection: projects
-# link: "https://reasoning.nikolausholzer.com/mlr/mlr1/"
+link: "https://reasoning.nikolausholzer.com/mlr/mlr1/"
 ---
 
 This is a shortened version of the full article available on my research website.
