@@ -12,3 +12,4 @@ I am a researcher at **Columbia University** advised by Professor [Baishakhi Ray
 My work focuses on designing better code generation systems. Our field is focusing more and more on agentic reasoning and with that comes a greater focus on reasoning as a whole. I am interested in making intelligent systems more intelligent and learning to understand *why* agents make decisions.
 
 If you have any questions about my research, or want to collaborate, feel free to reach out!
+
