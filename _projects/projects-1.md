@@ -1,6 +1,6 @@
 ---
 title: "Mechanics of Learned Reasoning 1: TempoBench"
-excerpt: "Mechanics of Learned Reasoning 1: TempoBench<br/><img src='/images/tempobench.png' width='500'>."
+excerpt: "Mechanics of Learned Reasoning 1: TempoBench<br/><img src='/images/tempobench.png' width='750'>."
 collection: projects
 link: "https://reasoning.nikolausholzer.com/mlr/mlr1/"
 ---
