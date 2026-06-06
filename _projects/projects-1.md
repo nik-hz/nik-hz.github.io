@@ -1,18 +1,20 @@
 ---
-title: "Mechanics of Learned Reasoning 1: TempoBench"
-excerpt: "Mechanics of Learned Reasoning 1: TempoBench<br/><img src='/images/tempobench.png' width='750'>."
+title: "TempoBench: Evaluating Temporal Causal Reasoning in Large Language Models"
+excerpt: "TempoBench: Evaluating Temporal Causal Reasoning in Large Language Models<br/><img src='/images/tempobench.png' width='750'>."
 collection: projects
-link: "https://reasoning.nikolausholzer.com/mlr/mlr1/"
+link: "https://arxiv.org/abs/2510.27544"
 ---
 
-This is a shortened version of the full article available on my research website.
+**Nikolaus Holzer, William Fishell, Baishakhi Ray, Mark Santolucito** — Columbia University
 
----
-
-As a small teaser and good high level overview, please enjoy our **paper abstract:**
-
-![Performance overview](/images/p1-overview.png)
+*COLM 2026*
 
 ---
 
-Large Language Models (LLMs) are increasingly excelling and outpacing human performance on many tasks. However, to improve LLM reasoning, researchers either rely on ad-hoc generated datasets or formal mathematical proof systems such as the Lean proof assistant. Whilst ad-hoc generated methods can capture the decision chains of real-world reasoning processes, they may encode some inadvertent bias in the space of reasoning they cover; they also cannot be formally verified. On the other hand, systems like Lean can guarantee verifiability, but are not well-suited to capture the nature of agentic decision chain-based tasks. This creates a gap both in performance for functions such as business agents or code assistants, and in the usefulness of LLM reasoning benchmarks, whereby these fall short in reasoning structure or real-world alignment. We introduce TempoBench, the first formally grounded and verifiable diagnostic benchmark that parametrizes difficulty to systematically analyze how LLMs perform reasoning. TempoBench uses two evaluation benchmarks to break down reasoning ability. First, temporal trace evaluation (TTE) tests the ability of an LLM to understand and simulate the execution of a given multi-step reasoning system. Subsequently, temporal causal evaluation (TCE) tests an LLM's ability to perform multi-step causal reasoning and to distill cause-and-effect relations from complex systems. We find that models score 65.6% on TCE-normal, and 7.5% on TCE-hard. This shows that state-of-the-art (sota) LLMs clearly understand the TCE task but perform poorly as system complexity increases. Our code is available at our [GitHub repository](https://github.com/nik-hz/tempobench), you can find the paper on [Arxiv](https://arxiv.org/abs/2510.27544).
+Temporal reasoning involves understanding how systems evolve over time through input-driven state transitions. A key aspect is *temporal causal reasoning*: causally reasoning about what prior inputs were necessary in causing an observed outcome. While large language models (LLMs) perform well at forward simulation, predicting outputs from inputs, they struggle to identify the minimal causal inputs of outcomes. To study this distinction, we define two tasks: *trace simulation* (SIM), which requires models to simulate system execution, and *minimal causal attribution* (MIN), which identifies the minimal set of inputs necessary for a given outcome. We introduce TempoBench, the first formally verified benchmark for temporal causal reasoning, built from synthesized Mealy machines with controllable complexity and provably correct causal labels. Across frontier models, we observe that despite achieving up to 96% accuracy on the SIM task, performance on the causal attribution MIN task drops below 25%; models fail to reason about causal necessity. Over 94% of causal errors involve overspecification, where models perform retrieval and list all possible inputs rather than reasoning about the minimal causal subset. Fine-tuning on TempoBench training corpus improves causal reasoning and generalizes better than math, code, or instruction training, with gains across standard reasoning benchmarks.
+
+![TempoBench pipeline](/images/tb-pipeline.png)
+
+![Feature importance for MIN task](/images/tb-feature-importance.png)
+
+[arXiv](https://arxiv.org/abs/2510.27544) · [GitHub](https://github.com/nik-hz/tempobench)

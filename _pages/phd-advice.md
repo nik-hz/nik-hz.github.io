@@ -6,3 +6,7 @@ author_profile: true
 ---
 
 Here are some thoughts and practical lessons I’ve learned during my PhD — about research focus, publishing, collaboration, and staying sane. WIP
+
+---
+
+**My Statement of Purpose** — the SOP I used when applying to PhD programs: [SOP_Nikolaus_Holzer.pdf](/files/SOP_Nikolaus_Holzer.pdf)
