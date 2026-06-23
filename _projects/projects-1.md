@@ -1,6 +1,6 @@
 ---
 title: "TempoBench: Evaluating Temporal Causal Reasoning in Large Language Models"
-excerpt: "TempoBench: Evaluating Temporal Causal Reasoning in Large Language Models<br/><img src='/images/tempobench.png' width='750'>."
+excerpt: "TempoBench: Evaluating Temporal Causal Reasoning in Large Language Models<br/><img src='/images/tempobench-title.png' width='750'>."
 collection: projects
 link: "https://arxiv.org/abs/2510.27544"
 ---
